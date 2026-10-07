@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Electi Data Migration Tool</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 600px; margin: 40px auto; line-height: 1.6; }
+        .card { border: 1px solid #ccc; padding: 20px; border-radius: 8px; background: #f9f9f9; }
+        input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        #log { margin-top: 20px; color: #333; font-size: 0.9em; white-space: pre-wrap; background: #222; color: #0f0; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Vault Migration Tool</h2>
+        <p>1. Select your old <code>electi_backup_encrypted_...json</code> file.</p>
+        <input type="file" id="old-file" accept=".json">
+        
+        <p>2. Enter your community passcode.</p>
+        <input type="password" id="password" placeholder="Passcode">
+        
+        <button id="migrate-btn">Migrate & Download vault.enc</button>
+    </div>
+
+    <div id="log">Awaiting input...</div>
+
+    <script>
+        const logEl = document.getElementById('log');
+        const log = (msg) => { logEl.textContent += '\n' + msg; };
+
+        const base64ToArrayBuffer = base64 => Uint8Array.from(atob(base64), c => c.charCodeAt(0)).buffer;
+        const bufferToHex = buffer => Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+        const bufferToBase64 = buffer => {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        };
+
+        // Helper to safely convert arrays or objects into a standard array
+        const toArray = (data) => {
+            if (!data) return [];
+            if (Array.isArray(data)) return data;
+            if (typeof data === 'object') return Object.values(data);
+            return [];
+        };
+
+        async function getCryptoKey(password, saltBuffer) {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
+            );
+            return crypto.subtle.deriveKey(
+                { name: "PBKDF2", salt: saltBuffer, iterations: 100000, hash: "SHA-256" },
+                keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+            );
+        }
+
+        document.getElementById('migrate-btn').addEventListener('click', async () => {
+            const file = document.getElementById('old-file').files[0];
+            const pwd = document.getElementById('password').value;
+            
+            if (!file || !pwd) return alert("Please provide both the old file and the password.");
+            
+            log("Reading old backup file...");
+            
+            try {
+                const text = await file.text();
+                const oldEncrypted = JSON.parse(text);
+                
+                log("Decrypting old data...");
+                const salt = base64ToArrayBuffer(oldEncrypted.salt);
+                const iv = base64ToArrayBuffer(oldEncrypted.iv);
+                const ciphertext = base64ToArrayBuffer(oldEncrypted.data);
+                
+                const oldKey = await getCryptoKey(pwd, salt);
+                
+                const decryptedBuffer = await crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: iv }, oldKey, ciphertext
+                );
+                const oldJsonString = new TextDecoder().decode(decryptedBuffer);
+                const oldData = JSON.parse(oldJsonString);
+                
+                log("Decryption successful!");
+
+                log("Transforming data and retaining all properties safely...");
+                
+                const usersList = toArray(oldData.users);
+                const teamsList = toArray(oldData.teams);
+                const contestsList = toArray(oldData.contests || oldData.competitions);
+
+                const newData = {
+                    users: usersList.map(u => ({
+                        ...u,
+                        cfHandle: u.cfHandle || u.handle || '',
+                        fullName: u.fullName || u.name || 'Unknown',
+                        university: u.university || 'PSUT',
+                        isTrusted: u.isTrusted !== undefined ? u.isTrusted : true,
+                        readinessScore: u.readinessScore || u.lunaNovaScore || 0,
+                        maxRating: u.maxRating || 0,
+                        currentRating: u.currentRating || 0,
+                        placements: u.placements || []
+                    })),
+                    teams: teamsList.map(t => ({ ...t })),
+                    contests: contestsList.map(c => ({ ...c }))
+                };
+
+                log(`Successfully mapped ${newData.users.length} users, ${newData.teams.length} teams, and ${newData.contests.length} contests.`);
+
+                log("Encrypting into new vault.enc format...");
+                const plaintextBuffer = new TextEncoder().encode(JSON.stringify(newData));
+                const newSalt = crypto.getRandomValues(new Uint8Array(16));
+                const newIv = crypto.getRandomValues(new Uint8Array(12));
+                
+                const newKey = await getCryptoKey(pwd, newSalt);
+                
+                const newCiphertextBuffer = await crypto.subtle.encrypt(
+                    { name: "AES-GCM", iv: newIv }, newKey, plaintextBuffer
+                );
+
+                const finalVaultEnvelope = JSON.stringify({
+                    version: 1,
+                    salt: bufferToHex(newSalt),
+                    iv: bufferToHex(newIv),
+                    ciphertext: bufferToBase64(newCiphertextBuffer)
+                });
+
+                log("Generating download...");
+                const blob = new Blob([finalVaultEnvelope], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'vault.enc';
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                log("Migration Complete! Drop the new vault.enc into your /data folder.");
+
+            } catch (err) {
+                console.error(err);
+                log("ERROR: " + err.message + "\nEnsure you used the correct passcode.");
+            }
+        });
+    </script>
+</body>
+</html>
