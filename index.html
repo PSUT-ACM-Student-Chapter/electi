@@ -3,454 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Operation Electi - Homepage</title>
+    <title>Electi - Community Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .file-input-label {
-            cursor: pointer;
-            display: inline-block;
-            text-align: center;
-            transition: background-color 0.3s;
-        }
-        input[type="file"] {
-            display: none;
-        }
-        .modal-overlay {
-            transition: opacity 0.3s ease;
-        }
-        .modal-content {
-            transition: transform 0.3s ease;
-        }
-        #toast-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: flex-end;
-        }
-        .toast-notification {
-            background-color: #2d3748;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            opacity: 0;
-            transform: translateX(20px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            position: relative;
-        }
-        .toast-notification.show {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        .toast-notification.info { background-color: #2b6cb0; }
-        .toast-notification.error { background-color: #c53030; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
+<body class="text-slate-800 min-h-screen">
 
-    <div class="w-full max-w-7xl">
-        <header class="text-center mb-12">
-            <div class="flex justify-center items-center gap-4 mb-2">
-                <img src="https://i.ibb.co/JNyxxBv/logo.png" alt="Operation Electi Logo" class="h-20 w-20" onerror="this.onerror=null; this.src='https://placehold.co/80x80/e0e0e0/333?text=Logo';">
-                <h1 class="text-6xl font-bold text-gray-900">Operation Electi</h1>
+    <!-- 1. Vault Login Screen -->
+    <div id="login-screen" class="flex flex-col items-center justify-center min-h-screen px-4">
+        <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full text-center">
+            <div class="bg-indigo-100 p-3 rounded-xl w-12 h-12 mx-auto mb-4 flex items-center justify-center">
+                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
             </div>
-            <p class="mt-2 text-xl text-gray-600">Your central hub for competitive programming analytics and tools.</p>
-        </header>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900 mb-2">Operation Electi</h1>
+            <p class="text-sm text-slate-500 mb-6">Enter the community passcode to decrypt the vault.</p>
+         <input type="password" id="vault-password" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 mb-4" placeholder="Passcode">
+<button id="unlock-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition-colors shadow-sm">Unlock Community Data</button>
+<p id="login-error" class="text-xs text-red-500 mt-4"></p>
 
-        <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
-            <!-- Card 1: Readiness Calculator -->
-            <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col hover:shadow-2xl transition-shadow duration-300">
-                <h2 class="text-2xl font-bold text-gray-800 mb-3">Contest Readiness Calculator</h2>
-                <p class="text-gray-600 flex-grow mb-6">
-                    Analyze Codeforces performance to determine readiness for Div. 2 contests and Luna rounds.
-                </p>
-                <a href="readiness.html" class="text-center bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors duration-300">
-                    Open Calculator
-                </a>
-            </div>
+<!-- NEW: Start Fresh Option -->
+<div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-sm">
+    <span class="text-slate-500">No vault file yet?</span>
+    <button id="bypass-btn" class="text-indigo-600 font-medium hover:text-indigo-800 transition-colors">Start Fresh / Restore JSON</button>
+</div>   
+        </div>
+    </div>
 
-            <!-- Card 2: User Management -->
-            <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col hover:shadow-2xl transition-shadow duration-300">
-                <h2 class="text-2xl font-bold text-gray-800 mb-3">User Management</h2>
-                <p class="text-gray-600 flex-grow mb-6">
-                    Manage the user database. Add, edit, and view detailed user profiles, including placements and scores.
-                </p>
-                <a href="data.html" class="text-center bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-300">
-                    Manage Users
-                </a>
-            </div>
-
-            <!-- Card 3: Data Editor -->
-            <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col hover:shadow-2xl transition-shadow duration-300">
-                <h2 class="text-2xl font-bold text-gray-800 mb-3">Data Editor</h2>
-                <p class="text-gray-600 flex-grow mb-6">
-                    Edit and manage core datasets. This includes adding or modifying competitions, universities, and teams.
-                </p>
-                <a href="editor.html" class="text-center bg-sky-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-sky-700 transition-colors duration-300">
-                    Open Editor
-                </a>
-            </div>
-
-            <!-- Card 4: Analytics Dashboard -->
-            <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col hover:shadow-2xl transition-shadow duration-300">
-                <h2 class="text-2xl font-bold text-gray-800 mb-3">Analytics Dashboard</h2>
-                <p class="text-gray-600 flex-grow mb-6">
-                   Explore insightful visualizations and analyze performance across universities, teams, and competitions.
-                </p>
-                <a href="analytics.html" class="text-center bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors duration-300">
-                    Open Dashboard
-                </a>
-            </div>
-
-            <!-- Card 5: Data Management -->
-            <div class="bg-white rounded-xl shadow-lg p-8 flex flex-col hover:shadow-2xl transition-shadow duration-300">
-                <h2 class="text-2xl font-bold text-gray-800 mb-3">Data Management</h2>
-                <p class="text-gray-600 flex-grow mb-6">
-                   Import and export your entire dataset. Use this to backup your data or load a previous state.
-                </p>
-                <div class="flex flex-col space-y-3">
-                    <label for="jsonFileInput" class="file-input-label bg-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-green-700">
-                        Import Data (JSON)
-                    </label>
-                    <input type="file" id="jsonFileInput" accept=".json">
-                    <button id="exportDataBtn" class="text-center bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors duration-300">
-                        Export Data (JSON)
-                    </button>
-                </div>
-            </div>
-        </main>
+    <!-- 2. Main SPA Dashboard (Hidden until decrypted) -->
+    <div id="app-dashboard" style="display: none;" class="flex h-screen overflow-hidden">
         
-        <!-- Toast Notification Container -->
-        <div id="toast-container"></div>
-    </div>
-
-    <!-- Password Modal -->
-    <div id="passwordModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-        <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-sm p-6 relative transform scale-95">
-            <h3 id="passwordModalTitle" class="text-lg font-bold mb-4">Enter Password</h3>
-            <form id="passwordForm">
-                <div class="space-y-4">
-                    <div>
-                        <label for="passwordField" class="block text-sm font-medium text-gray-700">Password</label>
-                        <input type="password" id="passwordField" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-                    </div>
-                    <div id="confirmPasswordContainer" class="hidden">
-                        <label for="confirmPasswordField" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                        <input type="password" id="confirmPasswordField" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                </div>
-                <div class="flex justify-end gap-4 mt-6">
-                    <button type="button" id="passwordCancelBtn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
-                    <button type="submit" id="passwordOkBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">OK</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Confirmation Modal -->
-    <div id="confirmationModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-        <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative transform scale-95">
-            <h3 id="confirmationModalTitle" class="text-lg font-bold mb-4">Confirm Action</h3>
-            <p id="confirmationModalMessage" class="text-gray-700 mb-6">Are you sure?</p>
-            <div class="flex justify-end gap-4">
-                <button id="confirmCancelBtn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
-                <button id="confirmOkBtn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Confirm</button>
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white border-r border-slate-200 flex flex-col">
+            <div class="p-6 border-b border-slate-100">
+                <h1 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    Electi
+                </h1>
             </div>
-        </div>
+            
+            <nav class="flex-1 overflow-y-auto p-4 space-y-6">
+                <!-- Community Section -->
+                <div>
+                    <div class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Community</div>
+                    <div class="space-y-1">
+                        <button data-view="dashboard" onclick="window.showView('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                            Dashboard
+                        </button>
+                        <button data-view="analytics" onclick="window.showView('analytics')" class="nav-btn w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                            Analytics
+                        </button>
+                        <button data-view="leaderboard" onclick="window.showView('leaderboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+                            Div. 2 Readiness
+                        </button>
+                        <button data-view="teams" onclick="window.showView('teams')" class="nav-btn w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            Teams & History
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Admin Section -->
+                <div>
+                    <div class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Administration</div>
+                    <div class="space-y-1">
+                        <button data-view="users" onclick="window.showView('users')" class="nav-btn w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            User Management
+                        </button>
+                        <button data-view="editor" onclick="window.showView('editor')" class="nav-btn w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            Data Editor
+                        </button>
+                        <button data-view="admin" onclick="window.showView('admin')" class="nav-btn w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg>
+                            Importer & Sync
+                        </button>
+                        <button data-view="management" onclick="window.showView('management')" class="nav-btn w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                            Vault Backup
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="p-4 border-t border-slate-200">
+		    <button onclick="localStorage.removeItem('electi_draft'); location.reload()" class="w-full text-sm text-slate-500 hover:text-slate-800 flex justify-center items-center gap-2">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+    Lock Vault
+</button>
+            </div>
+        </aside>
+
+        <!-- Dynamic Content View -->
+        <main class="flex-1 overflow-y-auto bg-slate-50 p-8">
+            <div id="view-container" class="max-w-6xl mx-auto"></div>
+        </main>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- DOM ELEMENT REFERENCES ---
-            const jsonFileInput = document.getElementById('jsonFileInput');
-            const exportDataBtn = document.getElementById('exportDataBtn');
-            const confirmationModal = document.getElementById('confirmationModal');
-            const confirmationModalTitle = document.getElementById('confirmationModalTitle');
-            const confirmationModalMessage = document.getElementById('confirmationModalMessage');
-            const confirmCancelBtn = document.getElementById('confirmCancelBtn');
-            const confirmOkBtn = document.getElementById('confirmOkBtn');
-            const passwordModal = document.getElementById('passwordModal');
-            const passwordModalTitle = document.getElementById('passwordModalTitle');
-            const passwordForm = document.getElementById('passwordForm');
-            const passwordField = document.getElementById('passwordField');
-            const confirmPasswordContainer = document.getElementById('confirmPasswordContainer');
-            const confirmPasswordField = document.getElementById('confirmPasswordField');
-            const passwordCancelBtn = document.getElementById('passwordCancelBtn');
-            const passwordOkBtn = document.getElementById('passwordOkBtn');
-
-            // --- STATE VARIABLES ---
-            let confirmCallback = null;
-            let passwordCallback = null;
-            const LOCAL_STORAGE_KEY = 'operationelecti';
-
-            // --- CRYPTOGRAPHY ---
-            const textEncoder = new TextEncoder();
-            const textDecoder = new TextDecoder();
-
-            function arrayBufferToBase64(buffer) {
-                let binary = '';
-                const bytes = new Uint8Array(buffer);
-                const len = bytes.byteLength;
-                for (let i = 0; i < len; i++) {
-                    binary += String.fromCharCode(bytes[i]);
-                }
-                return window.btoa(binary);
-            }
-
-            function base64ToArrayBuffer(base64) {
-                const binary_string = window.atob(base64);
-                const len = binary_string.length;
-                const bytes = new Uint8Array(len);
-                for (let i = 0; i < len; i++) {
-                    bytes[i] = binary_string.charCodeAt(i);
-                }
-                return bytes.buffer;
-            }
-
-            async function getEncryptionKey(password, salt) {
-                const keyMaterial = await window.crypto.subtle.importKey(
-                    "raw",
-                    textEncoder.encode(password),
-                    { name: "PBKDF2" },
-                    false,
-                    ["deriveKey"]
-                );
-                return window.crypto.subtle.deriveKey(
-                    {
-                        name: "PBKDF2",
-                        salt: salt,
-                        iterations: 100000,
-                        hash: "SHA-256",
-                    },
-                    keyMaterial,
-                    { name: "AES-GCM", length: 256 },
-                    true,
-                    ["encrypt", "decrypt"]
-                );
-            }
-
-            async function encryptData(data, password) {
-                try {
-                    const salt = window.crypto.getRandomValues(new Uint8Array(16));
-                    const iv = window.crypto.getRandomValues(new Uint8Array(12));
-                    const key = await getEncryptionKey(password, salt);
-                    
-                    const encryptedContent = await window.crypto.subtle.encrypt(
-                        { name: "AES-GCM", iv: iv },
-                        key,
-                        textEncoder.encode(data)
-                    );
-
-                    return {
-                        salt: arrayBufferToBase64(salt),
-                        iv: arrayBufferToBase64(iv),
-                        data: arrayBufferToBase64(encryptedContent)
-                    };
-                } catch (error) {
-                    console.error("Encryption failed:", error);
-                    showToast("Encryption failed. See console for details.", "error");
-                    return null;
-                }
-            }
-
-            async function decryptData(encryptedPayload, password) {
-                try {
-                    const salt = base64ToArrayBuffer(encryptedPayload.salt);
-                    const iv = base64ToArrayBuffer(encryptedPayload.iv);
-                    const data = base64ToArrayBuffer(encryptedPayload.data);
-                    const key = await getEncryptionKey(password, salt);
-
-                    const decryptedContent = await window.crypto.subtle.decrypt(
-                        { name: "AES-GCM", iv: iv },
-                        key,
-                        data
-                    );
-
-                    return textDecoder.decode(decryptedContent);
-                } catch (error) {
-                    console.error("Decryption failed:", error);
-                    return null;
-                }
-            }
-
-            // --- NOTIFICATION & MODAL ---
-            function showToast(message, type = 'info', duration = 3000) {
-                const container = document.getElementById('toast-container');
-                const toast = document.createElement('div');
-                toast.className = `toast-notification ${type}`;
-                toast.textContent = message;
-                container.appendChild(toast);
-
-                setTimeout(() => {
-                    toast.classList.add('show');
-                }, 10);
-
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                    toast.addEventListener('transitionend', () => toast.remove());
-                }, duration);
-            }
-
-            function showConfirmationModal(title, message, onConfirm) { 
-                confirmationModalTitle.textContent = title; 
-                confirmationModalMessage.textContent = message; 
-                confirmCallback = onConfirm; 
-                confirmationModal.classList.remove('hidden'); 
-                setTimeout(() => { 
-                    confirmationModal.querySelector('.modal-overlay')?.classList.remove('opacity-0'); 
-                    confirmationModal.querySelector('.modal-content')?.classList.remove('scale-95'); 
-                }, 10); 
-            }
-
-            function hideConfirmationModal() { 
-                confirmationModal.querySelector('.modal-overlay')?.classList.add('opacity-0'); 
-                confirmationModal.querySelector('.modal-content')?.classList.add('scale-95'); 
-                setTimeout(() => { 
-                    confirmationModal.classList.add('hidden'); 
-                    confirmCallback = null; 
-                }, 300); 
-            }
-
-            function showPasswordModal(title, showConfirm, onConfirm) {
-                passwordModalTitle.textContent = title;
-                passwordForm.reset();
-                confirmPasswordContainer.style.display = showConfirm ? 'block' : 'none';
-                confirmPasswordField.required = showConfirm;
-                passwordCallback = onConfirm;
-                passwordModal.classList.remove('hidden');
-                setTimeout(() => {
-                    passwordModal.querySelector('.modal-overlay')?.classList.remove('opacity-0');
-                    passwordModal.querySelector('.modal-content')?.classList.remove('scale-95');
-                    passwordField.focus();
-                }, 10);
-            }
-
-            function hidePasswordModal() {
-                passwordModal.querySelector('.modal-overlay')?.classList.add('opacity-0');
-                passwordModal.querySelector('.modal-content')?.classList.add('scale-95');
-                setTimeout(() => {
-                    passwordModal.classList.add('hidden');
-                    passwordCallback = null;
-                }, 300);
-            }
-
-            // --- HELPER FUNCTIONS ---
-            function getFormattedDateTimeString() { 
-                const now = new Date(); 
-                const pad = (num) => num.toString().padStart(2, '0'); 
-                return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`; 
-            }
-
-            function downloadFile(content, fileName, mimeType) { 
-                const blob = new Blob([content], { type: mimeType }); 
-                const link = document.createElement('a'); 
-                link.href = URL.createObjectURL(blob); 
-                link.download = fileName; 
-                document.body.appendChild(link); 
-                link.click(); 
-                document.body.removeChild(link); 
-            }
-
-            // --- CORE LOGIC ---
-            function loadDataIntoStorage(jsonData, fileName) {
-                try {
-                    const data = JSON.parse(jsonData);
-                    if (data.users && data.teams && data.competitions && data.universities) {
-                        showConfirmationModal('Overwrite Local Data?', `This will overwrite all existing data in your browser's storage. Are you sure you want to continue?`, () => {
-                            localStorage.setItem(LOCAL_STORAGE_KEY, jsonData);
-                            showToast(`Data from ${fileName} imported successfully!`, 'info');
-                        });
-                    } else {
-                        showToast('Error: Invalid JSON file format.', 'error');
-                    }
-                } catch (error) {
-                    console.error("Error parsing JSON data:", error);
-                    showToast('Error: Failed to read or parse the data.', 'error');
-                }
-            }
-
-            // --- Event listener for file import ---
-            jsonFileInput.addEventListener('change', (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const fileContent = e.target.result;
-                    try {
-                        const data = JSON.parse(fileContent);
-                        // Check if it's an encrypted backup
-                        if (data.salt && data.iv && data.data) {
-                            showPasswordModal('Enter Decryption Password', false, async (password) => {
-                                const decryptedJson = await decryptData(data, password);
-                                if (!decryptedJson) {
-                                    showToast('Decryption failed. Incorrect password or corrupt file.', 'error');
-                                    return;
-                                }
-                                loadDataIntoStorage(decryptedJson, file.name);
-                            });
-                        } else { // Assume it's a plain JSON backup
-                            loadDataIntoStorage(fileContent, file.name);
-                        }
-                    } catch (error) {
-                        console.error("Error reading file:", error);
-                        showToast('Error: Could not read the file. It might not be valid JSON.', 'error');
-                    }
-                };
-                reader.readAsText(file);
-                jsonFileInput.value = ''; // Reset for re-upload
-            });
-
-            // --- Event listener for data export ---
-            exportDataBtn.addEventListener('click', () => {
-                const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-                if (!data) {
-                    showToast('No data in local storage to export.', 'error');
-                    return;
-                }
-
-                showPasswordModal('Create Backup Password', true, async (password) => {
-                    const encryptedPayload = await encryptData(data, password);
-                    if (encryptedPayload) {
-                        const encryptedJsonString = JSON.stringify(encryptedPayload, null, 2);
-                        downloadFile(encryptedJsonString, `electi_backup_encrypted_${getFormattedDateTimeString()}.json`, 'application/json');
-                        showToast("Encrypted backup downloaded successfully.", "info");
-                    }
-                });
-            });
-
-            // --- Modal event listeners ---
-            confirmCancelBtn.addEventListener('click', hideConfirmationModal);
-            confirmOkBtn.addEventListener('click', () => { 
-                if (confirmCallback) confirmCallback(); 
-                hideConfirmationModal(); 
-            });
-            passwordForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const password = passwordField.value;
-                if (confirmPasswordField.required && password !== confirmPasswordField.value) {
-                    showToast("Passwords do not match.", "error");
-                    return;
-                }
-                if (passwordCallback) {
-                    passwordCallback(password);
-                }
-                hidePasswordModal();
-            });
-            passwordCancelBtn.addEventListener('click', hidePasswordModal);
-        });
-    </script>
-
+    <!-- App Entry Point -->
+    <script type="module" src="./src/app.js"></script>
 </body>
 </html>
-
